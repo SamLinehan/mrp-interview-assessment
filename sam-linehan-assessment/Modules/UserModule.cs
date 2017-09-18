@@ -1,34 +1,58 @@
 ﻿using System;
 using Nancy;
 using Nancy.ModelBinding;
+using Database;
+using System.Linq;
+using Newtonsoft.Json;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace sam_linehan_assessment.Modules
 {
     public class UserModule : NancyModule
     {
-        public UserModule()
+        private UserContext _context;
+
+        public UserModule(UserContext context) : base("/user")
         {
-			Post("/user/add", args =>
+            _context = context;
+
+			Post("/add", args =>
 			{
-				var userModel = this.Bind<Models.User>();
+				var userModel = this.Bind<Database.Models.User>();
                 return "";
 			});
 
-            Delete("/user/delete/{id}", args => 
+            Delete("/delete/{id}", args => 
             {
                 return "";
             });
 
-            Get("/user/{id}", args =>
+            Get("/{id}", args =>
             {
-                return "getting user id";
+                int userId = args.id;
+                var query = from user in _context.Users
+                            where user.Id == userId
+                            select user;
+
+                var result = JsonConvert.SerializeObject(query);
+                return result;
             });
 
-            Get("/user/list", args =>
+
+            Get("/list", async args =>
             {
-                return "user list";
+
+                var result = await GetListAsync();
+                return JsonConvert.SerializeObject(result);
             });
 
+        }
+
+        public async Task<IEnumerable<Database.Models.User>> GetListAsync()
+        {
+            return await _context.Users.ToListAsync();
         }
     }
 }
