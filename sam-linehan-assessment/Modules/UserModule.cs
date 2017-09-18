@@ -18,25 +18,26 @@ namespace sam_linehan_assessment.Modules
         {
             _context = context;
 
-			Post("/add", args =>
+            Post("/add", async args =>
 			{
-				var userModel = this.Bind<Database.Models.User>();
-                return "";
+                Database.Models.User newUser = this.Bind<Database.Models.User>();
+                var result = await AddUserAsync(newUser);
+                return result;
 			});
 
-            Delete("/delete/{id}", args => 
-            {
-                return "";
-            });
-
-            Get("/{id}", args =>
+            Delete("/delete/{id}", async args => 
             {
                 int userId = args.id;
-                var query = from user in _context.Users
-                            where user.Id == userId
-                            select user;
+                var result = await DeleteUserAsync(userId);
 
-                var result = JsonConvert.SerializeObject(query);
+                return result;
+            });
+
+            Get("/{id}", async args =>
+            {
+                int userId = args.id;
+                var result = await GetUserAsync(userId);
+
                 return result;
             });
 
@@ -50,9 +51,34 @@ namespace sam_linehan_assessment.Modules
 
         }
 
+        public async Task<string> AddUserAsync(Database.Models.User user)
+        {
+            var name = user.First + " " + user.Last;
+            await _context.Users.AddAsync(user);
+            await _context.SaveChangesAsync();
+
+            return "Added User: " + name;
+        }
+
+        public async Task<string> DeleteUserAsync(int id)
+        {
+            Database.Models.User userToDelete = await _context.Users.FindAsync(id);
+            var name = userToDelete.First + " " + userToDelete.Last;
+
+            _context.Users.Remove(userToDelete);
+            await _context.SaveChangesAsync();
+            return "Deleted User: " + name;
+        }
+
+		public async Task<Database.Models.User> GetUserAsync(int id)
+		{
+			return await _context.Users.FindAsync(id);
+		}
+
         public async Task<IEnumerable<Database.Models.User>> GetListAsync()
         {
             return await _context.Users.ToListAsync();
         }
+
     }
 }

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Nancy.Owin;
+using Serilog;
 
 namespace sam_linehan_assessment
 {
@@ -22,7 +23,9 @@ namespace sam_linehan_assessment
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
-            loggerFactory.AddConsole();
+			var log = new LoggerConfiguration()
+            	.WriteTo.RollingFile("log-{Date}.txt")
+            	.CreateLogger();
 
             if (env.IsDevelopment())
             {
